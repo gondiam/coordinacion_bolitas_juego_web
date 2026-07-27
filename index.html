@@ -173,8 +173,9 @@
       // the swing by the ball's real top speed (with margin for accel ramp-up/reaction time)
       const segTime = len / scrollSpeed;
       const maxReachableSwing = (MAX_SPEED * BALL_CATCHUP_FACTOR * segTime) / (Math.PI / 2);
-      const maxSwing = Math.min(maxOffset * 0.6, maxReachableSwing);
-      let target = lastOffset + (Math.random() * 2 - 1) * maxSwing;
+      const maxSwing = Math.min(maxOffset * 0.612, maxReachableSwing);
+      const centerPull = -lastOffset * 0.15;
+      let target = lastOffset + (Math.random() * 2 - 1) * maxSwing + centerPull;
       target = Math.max(-maxOffset, Math.min(maxOffset, target));
       segments.push({ start: d, len, from: lastOffset, to: target, curve: isCurve });
       lastOffset = target;
