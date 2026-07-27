@@ -68,7 +68,12 @@ Si es la primera vez que juegas, deja el deslizador en **x1**.
 
 ## Al terminar la partida
 
-Cuando se acaba el tiempo, aparece el resultado: el porcentaje de tiempo que cada bolita ha pasado dentro de su camino. Cuanto más alto sea el porcentaje, mejor lo has hecho.
+Cuando se acaba el tiempo, aparece el resultado con dos datos por bolita:
+
+- **Porcentaje de acierto**: el tiempo que la bolita ha pasado dentro de su camino. Cuanto más alto, mejor.
+- **Tiempo de reacción**: la velocidad con la que pulsas la tecla correcta cuando la bolita se sale del camino. Se muestra el valor mínimo, máximo y medio (en segundos). Si nunca te has salido, los tres valores aparecen a 0.00s.
+
+Cuanto más bajo sea el tiempo de reacción, más rápido respondes al salirte. Un tiempo de 0.00s significa que nunca hubo una salida o que ya estabas pulsando la tecla correcta en el momento de salirse.
 
 Para volver a jugar, haz clic en el botón **"Volver a jugar"**.
 

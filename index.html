@@ -118,6 +118,23 @@
     keys.add(e.key);
     if ((e.key === 'p' || e.key === 'P') && !e.repeat && running) togglePause();
     if (e.key === 'Escape' && !e.repeat && running) quitToMenu();
+    if (!running || paused) return;
+    const ballY = H * BALL_Y_RATIO;
+    const dist = scrollOffset + (H - ballY);
+    if (leftBall.outSince !== null && !leftBall.reactionTriggered) {
+      const cx = laneWidth / 2 + leftPath(dist);
+      if (e.key === (leftBall.x < cx ? 'd' : 'a')) {
+        leftBall.reactionTimes.push(totalTime - leftBall.outSince);
+        leftBall.reactionTriggered = true;
+      }
+    }
+    if (rightBall.outSince !== null && !rightBall.reactionTriggered) {
+      const cx = laneWidth + laneWidth / 2 + rightPath(dist);
+      if (e.key === (rightBall.x < cx ? 'ArrowRight' : 'ArrowLeft')) {
+        rightBall.reactionTimes.push(totalTime - rightBall.outSince);
+        rightBall.reactionTriggered = true;
+      }
+    }
   });
   window.addEventListener('keyup', e => keys.delete(e.key));
 
@@ -231,8 +248,8 @@
     leftPath = buildPath(totalDistance, laneHalfWidth, margin, straightDistance, SCROLL_SPEED);
     rightPath = buildPath(totalDistance, laneHalfWidth, margin, straightDistance, SCROLL_SPEED);
 
-    leftBall = { x: laneWidth / 2, vx: 0 };
-    rightBall = { x: laneWidth + laneWidth / 2, vx: 0 };
+    leftBall = { x: laneWidth / 2, vx: 0, outSince: null, reactionTriggered: false, reactionTimes: [] };
+    rightBall = { x: laneWidth + laneWidth / 2, vx: 0, outSince: null, reactionTriggered: false, reactionTimes: [] };
     scrollOffset = 0;
     timeLeft = duration;
     leftOutTime = 0; rightOutTime = 0; totalTime = 0;
@@ -249,6 +266,17 @@
     requestAnimationFrame(loop);
   }
 
+  function calcStats(times) {
+    if (times.length === 0) return { min: 0, max: 0, mean: 0 };
+    return {
+      min: Math.min(...times),
+      max: Math.max(...times),
+      mean: times.reduce((a, b) => a + b, 0) / times.length
+    };
+  }
+
+  function fmtStat(s) { return s.toFixed(2) + 's'; }
+
   function endGame() {
     running = false;
     setAlarm(false);
@@ -256,7 +284,11 @@
     hud.style.display = 'none';
     const leftPct = Math.max(0, 100 - (leftOutTime / totalTime) * 100).toFixed(0);
     const rightPct = Math.max(0, 100 - (rightOutTime / totalTime) * 100).toFixed(0);
-    resultText.innerHTML = `Bola izquierda: ${leftPct}% en el camino<br>Bola derecha: ${rightPct}% en el camino`;
+    const leftReact = calcStats(leftBall.reactionTimes);
+    const rightReact = calcStats(rightBall.reactionTimes);
+    resultText.innerHTML =
+      'Bola izquierda: ' + leftPct + '% &mdash; Reacci&oacute;n min ' + fmtStat(leftReact.min) + ' / m&aacute;x ' + fmtStat(leftReact.max) + ' / media ' + fmtStat(leftReact.mean) + '<br>' +
+      'Bola derecha: ' + rightPct + '% &mdash; Reacci&oacute;n min ' + fmtStat(rightReact.min) + ' / m&aacute;x ' + fmtStat(rightReact.max) + ' / media ' + fmtStat(rightReact.mean);
     resultScreen.style.display = 'flex';
   }
 
@@ -328,6 +360,32 @@
     const rightOut = Math.abs(rightBall.x - rightCenterX) > pathWidth / 2 - BALL_RADIUS * 0.4;
     if (leftOut) leftOutTime += dt;
     if (rightOut) rightOutTime += dt;
+    if (leftOut) {
+      if (leftBall.outSince === null) {
+        leftBall.outSince = totalTime;
+        leftBall.reactionTriggered = false;
+        if (keys.has(leftBall.x < leftCenterX ? 'd' : 'a')) {
+          leftBall.reactionTimes.push(0);
+          leftBall.reactionTriggered = true;
+        }
+      }
+    } else {
+      leftBall.outSince = null;
+      leftBall.reactionTriggered = false;
+    }
+    if (rightOut) {
+      if (rightBall.outSince === null) {
+        rightBall.outSince = totalTime;
+        rightBall.reactionTriggered = false;
+        if (keys.has(rightBall.x < rightCenterX ? 'ArrowRight' : 'ArrowLeft')) {
+          rightBall.reactionTimes.push(0);
+          rightBall.reactionTriggered = true;
+        }
+      }
+    } else {
+      rightBall.outSince = null;
+      rightBall.reactionTriggered = false;
+    }
     leftAlarm = leftOut; rightAlarm = rightOut;
     setAlarm(leftAlarm || rightAlarm);
 
